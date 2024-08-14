@@ -1,0 +1,38 @@
+FILEBEAT SERVICE
+ sudo apt install filebeat
+
+ //Filebeat Configuration file
+ # ============================== Filebeat inputs ===============================
+
+filebeat.inputs:
+
+# Each - is an input. Most options can be set at the input level, so
+# you can use different inputs for various configurations.
+# Below are the input specific configurations.
+
+# filestream is an input for collecting log messages from files.
+#- type: filestream
+- type: filestream
+  # Unique ID among all inputs, an ID is required.
+  id: my-filestream-id
+
+  # Change to true to enable this input configuration.
+  enabled: true
+
+  # Paths that should be crawled and fetched. Glob based paths.
+  paths:
+    #- /var/log/*.log
+    - /root/snort_log.log
+    #- c:\programdata\elasticsearch\logs\*
+  fields_under_root: true
+  fields:
+    app: snort
+# ------------------------------ Logstash Output -------------------------------
+output.logstash:
+  # The Logstash hosts
+  hosts: ["localhost:5044"]
+
+ sudo filebeat setup --index-management -E output.logstash.enabled=false -E 'output.elasticsearch.hosts=["localhost:9200"]' // Loading the index template
+ sudo systemctl start filebeat
+ sudo systemctl enable filebeat
+ curl -XGET 'http://localhost:9200/snort-logs-*/_search?pretty' //Validation of snort logs in filebeat service.
