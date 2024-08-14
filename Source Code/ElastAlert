@@ -1,0 +1,98 @@
+ELASTALERT
+ sudo apt-get install python3-pip python3-venv libffi-dev libssl-dev //libraray files
+ pip install elastalert
+ apt-cache policy git // find and handle packages associated with git
+ “git clone http://github.com/Yelp/elastalert.git // to clone repo
+ pip install "setuptools>=11.3"
+ python setup.py install
+ pip install "elasticsearch>=5.0.0"
+ elastalert-create-index // Index creation for elastalert
+
+// Configuration file for Rules
+ rules_folder: example_rules
+
+# How often ElastAlert will query Elasticsearch
+# The unit can be anything from weeks to seconds
+run_every:
+  minutes: 1
+# ElastAlert will buffer results from the most recent
+# period of time, in case some log sources are not in real time
+buffer_time:
+  minutes: 15
+
+# The Elasticsearch hostname for metadata writeback
+# Note that every rule can have its own Elasticsearch host
+es_host: localhost
+
+# The Elasticsearch port
+es_port: 9200
+
+writeback_index: elastalert_status
+writeback_alias: elastalert_alerts
+
+alert_time_limit:
+  days: 2
+
+//Rules file created based on frequency /etc/elastalert/example_rules/example_frequency.yaml
+# Rules based on Frequency
+
+# (Required)
+# Rule name, must be unique
+name: Frequency
+
+# (Required)
+# Type of alert.
+# the frequency rule type alerts when num_events events occur with timeframe time
+type: frequency
+
+# (Required)
+# Index to search, wildcard supported
+
+#index: logstash-*
+index: snort-logs-*
+
+# (Required, frequency specific)
+# Alert when this many documents matching the query occur within a timeframe
+num_events: 50
+
+# (Required, frequency specific)
+# num_events must occur within this amount of time to trigger an alert
+timeframe:
+  hours: 5
+
+# (Required)
+# A list of Elasticsearch filters used for find events
+# These filters are joined with AND and nested in a filtered query
+# For more info: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl.html
+#filter:
+#- term:
+#    some_field: "some_value"
+filter:
+- query:
+    query_string:
+      query: "Priority: 3"
+
+# (Required)
+# The alert is use when a match is found
+alert:
+- "email"
+
+# (required, email specific)
+# a list of email addresses to send alerts to
+email:
+- "sandy12345sandeep12345@gmail.com"
+
+smtp_host: "smtp.gmail.com"
+smtp_port: 587
+smtp_ssl: false
+from_addr: "sandy12345sandeep12345@gmail.com"
+smtp_auth_file: "/etc/elastalert/smtp_auth_file.yaml"
+
+
+//SMTP authorization file SMTP_AUTH_FILE.YAML /etc/elastalert/smtp_auth_file.yaml
+user: "sandy12345sandeep12345@gmail.com"
+password: "dxfw isar jvdn dxdn"
+
+
+ elastalert-test-rule example_rules/example_frequency.yaml // Testing rules created in ELASTALERT
+ python3 -m elastalert.elastalert --verbose --rule example_frequency.yaml // To start and test ELASTALERT
