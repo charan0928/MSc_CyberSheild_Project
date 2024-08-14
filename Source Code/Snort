@@ -1,0 +1,20 @@
+SNORT INSTALLATION
+apt-get update //To update
+apt install snort // installation
+snort -V // to check version
+ 
+SNORT CONFIGURATION
+/etc/snort/snort.conf // Configuration file location
+/etc/snort/rules //Rules folders
+
+//Rules added in local.rules
+alert tcp any any -> any 80 (msg:"Possible Credential Stuffing Attack - Multiple Failed Login Attempts"; flow:to_server,established; content:"POST"; http_method; content:"/login"; http_uri; content:"username="; http_client_body; threshold:type limit, track by_src, count 5, seconds 60; priority:1; sid:1000001; rev:1;)
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"SQL Injection Attempt"; flow:to_server,established; content:"' OR '1'='1"; nocase; classtype:web-application-attack; priority:1; sid:1000002; rev:1;)
+
+/var/log/snort/ // where the snort.log file stores the logs
+
+SNORT VALIDATION
+snort -A console -q -u snort -g snort -c /etc/snort/snort.conf -i ens37 & //
+
+SNORT EXECUTION
+snort -A console -q -u snort -g snort -c /etc/snort/snort.conf -i ens37 >> /root/snort_log.log & //Runs in background and stores the logs in snort_log.log
