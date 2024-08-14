@@ -1,0 +1,6 @@
+INSTALLATION OF KIBANA
+
+ sudo apt install kibana
+ sudo systemctl start kibana
+ sudo systemctl enable kibana
+ sudo systemctl status kibana //Verifying if Kibana is running or not.
