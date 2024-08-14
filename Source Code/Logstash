@@ -1,0 +1,62 @@
+LOGSTASH INSTALLATION 
+sudo apt install logstash
+/etc/logstash/conf.d // configuration files are located in this path
+ 
+//Input file /etc/logstash/02-beats-input.conf
+ input {
+   beats {
+	port => 5044
+   }
+ }
+ 
+ //Below mentioned code is for filter the logs  /etc/logstash/30-elasticsearch-output.conf
+ filter {
+  if [app] == "snort" {
+    dissect {
+      mapping => {
+        "message" => "%{ts} [%{field1}] [%{Generator_ID}:%{Signature_ID}:%{Revision}] %{Signature} [%{field3}] [Classification: %{Classification}] [Priority: %{Priority}] %{restOfLine}"
+      }
+    }
+
+    grok {
+      match => {
+        "restOfLine" => "^{(?<Protocol>.*?)\}\s(?<Source_IP>.*?)\s->\s(?<Destination_IP>.*)"
+      }
+    }
+    grok {
+      match => {
+        "Source_IP" => "%{IP:src_ip}(:%{INT:src_port})?"
+      }
+    }
+
+    date {
+      match => [ "ts", "MM/dd-HH:mm:ss.SSSSSS" ]
+      target => "@timestamp"
+    }
+
+    geoip {
+      source => "src_ip"
+      target => "geo"
+      database => "/usr/share/logstash/data/plugins/filters/geoip/1722340042/GeoLite2-ASN.mmdb"
+    }
+
+    mutate {
+      add_field => {
+        "[Location]" => "%{[geo][latitude]},%{[geo][longitude]}"
+      }
+    }
+  }
+}
+
+//Output file for logstash  /etc/logstash/10-snort-filter.conf
+output {
+   elasticsearch {
+     hosts => ["http://localhost:9200"]
+	 index => "snort-logs-%[+YYYY.MM.dd]"
+	}
+	stdout { codec => rubydebug }
+}
+
+sudo /usr/share/logstash/bin/logstash --path.settings /etc/logstash --config.test_and_exit -f /etc/logstash/conf.d/   //configuration test
+sudo systemctl start logstash
+sudo systemctl enable logstash
