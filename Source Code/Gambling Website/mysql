@@ -1,0 +1,8 @@
+sudo mysql -u root -p
+USE gambling_db;
+SHOW TABLES;
+DESCRIBE users;
+SELECT * FROM users;
+INSERT INTO users (username, password) VALUES ('newuser', MD5('newpassword'));
+UPDATE users SET password = MD5('newpassword') WHERE username = 'user1';
+DELETE FROM users WHERE username = 'user5';
